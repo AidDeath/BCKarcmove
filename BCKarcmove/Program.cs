@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
@@ -34,29 +33,28 @@ namespace BCKarcmove
         static void Main(string[] args)
         {
             Console.WriteLine("Выполняется архивирование копий БД");
-            writer.WriteLine("--- Program started ---");
+            writer.WriteLine(DateTime.Now + " --- Program started ---");
             if (!SettingsCheck())
             {
                 
                 exit(false);
             }
 
-
             
             string[] filesSource = Directory.GetFiles(Properties.Settings.Default.BackupPath,"*.BAK");
-            writer.WriteLine("INFO: Found " + filesSource.Length + " BAK files");
+            writer.WriteLine(DateTime.Now + " INFO: Found " + filesSource.Length + " BAK files");
 
             foreach (string file in filesSource)
             {
                 //  Пакуем все найденные бэкапы
                 Process.Start("WinRar.exe", "a -ep -ibck " + file + "_" + DateTime.Now.DayOfYear + ".rar" + " " + file).WaitForExit();
-                writer.WriteLine("INFO: File " + file + " RARed" );
+                writer.WriteLine(DateTime.Now + " INFO: File " + file + " RARed" );
             }
-            writer.WriteLine("INFO: Packing done");
+            writer.WriteLine(DateTime.Now + " INFO: Packing done");
 
             string[] filesDest = Directory.GetFiles(Properties.Settings.Default.ReservePath, "*.rar");
-            writer.WriteLine("INFO: {0} .rar files found in destination folder", filesDest.Length );
-            writer.WriteLine("INFO: Starting to delete old archives");
+            writer.WriteLine(DateTime.Now + " INFO: {0} .rar files found in destination folder", filesDest.Length );
+            writer.WriteLine(DateTime.Now + " INFO: Starting to delete old archives");
             if (filesDest.Length > 0)
             { // Удаляем в папке назначения файлы старше N дней, где N задаётся в настройках
                 foreach (string file in filesDest)
@@ -65,20 +63,21 @@ namespace BCKarcmove
                     { // если файлу больше заданного дней
                         writer.WriteLine("");
                         File.Delete(file);
-                        writer.WriteLine("INFO: {0}  - deleted", file);
+                        writer.WriteLine(DateTime.Now + " INFO: {0}  - deleted", file);
                     }
                 }
             }
-            writer.WriteLine("INFO: Deleteing done");
-            writer.WriteLine("INFO: Starting to move RARs to destination");
+            writer.WriteLine(DateTime.Now + " INFO: Deleteing done");
+            writer.WriteLine(DateTime.Now + " INFO: Starting to move RARs to destination");
 
             string[] archives = Directory.GetFiles(Properties.Settings.Default.BackupPath, "*.rar");
-            writer.WriteLine("INFO: Found {0} archives", archives.Length);
+            Console.WriteLine("Перемещение архивов в место хранения");
+            writer.WriteLine(DateTime.Now + " INFO: Found {0} archives", archives.Length);
             foreach (string item in archives)
             {
                 string filename = item.Substring(item.LastIndexOf("\\"), item.LastIndexOf("r") - item.LastIndexOf("\\") +1);
 
-                writer.WriteLine("INFO: Moving {0} to destination" , filename );
+                writer.WriteLine(DateTime.Now + " INFO: Moving {0} to destination", filename );
                 try
                 {
                     File.Move(item, Properties.Settings.Default.ReservePath + filename);
@@ -86,15 +85,15 @@ namespace BCKarcmove
                 catch (System.IO.IOException ex)
                 {
                     string str = ex.ToString();
-                    writer.WriteLine("ERROR: {0} file : {1}" , ex.Message, filename);
-                    writer.WriteLine("ERROR: Seems program already has ran today");
+                    writer.WriteLine(DateTime.Now + " ERROR: {0} file : {1}", ex.Message, filename);
+                    writer.WriteLine(DateTime.Now + " ERROR: Seems program already has ran today");
 
                     if (File.GetCreationTime(item) >= File.GetCreationTime(Properties.Settings.Default.ReservePath + filename))
                     {
                         File.Delete(Properties.Settings.Default.ReservePath + filename);
-                        writer.WriteLine("INFO: File in dest folder is older, removing");
+                        writer.WriteLine(DateTime.Now + " INFO: File in dest folder is older, removing");
                         File.Move(item, Properties.Settings.Default.ReservePath + filename);
-                        writer.WriteLine("INFO: File {0} replaced with new one", filename );
+                        writer.WriteLine(DateTime.Now + " INFO: File {0} replaced with new one", filename );
                     }
 
 
@@ -103,12 +102,12 @@ namespace BCKarcmove
                 }
 
             }
-            writer.WriteLine("INFO: Done moving archives to destination");
+            writer.WriteLine(DateTime.Now + " INFO: Done moving archives to destination");
             exit(true);
         }
         public static void exit(bool flag)
         {
-            writer.WriteLine("--- Program ends now ---");
+            writer.WriteLine(DateTime.Now + " --- Program ends now ---");
             writer.Close();
 
             sendmail(flag);
@@ -122,22 +121,22 @@ namespace BCKarcmove
             if (!(Directory.Exists(bckPath)))
             {
                 //writer.WriteLine("");
-                writer.WriteLine("ERROR: Path with backups is not exists");
-                writer.WriteLine("Check app.config");
+                writer.WriteLine(DateTime.Now + " ERROR: Path with backups is not exists");
+                writer.WriteLine(DateTime.Now + " Check app.config");
                 return false;
             }
 
             if (!(Directory.Exists(arcPath)))
             {
-                writer.WriteLine("ERROR: Path for archives is not exists");
+                writer.WriteLine(DateTime.Now + " ERROR: Path for archives is not exists");
                 writer.WriteLine("Check app.config");
                 return false;
             }
 
             if ( ((bckPath).LastIndexOf("\\") != (bckPath.Length - 1)) || ((arcPath).LastIndexOf("\\") != (arcPath.Length - 1)))
             {
-                writer.WriteLine("ERROR: Path is not ending with \\");
-                writer.WriteLine("ERROR: Check app.config");
+                writer.WriteLine(DateTime.Now + " ERROR: Path is not ending with \\");
+                writer.WriteLine(DateTime.Now + " ERROR: Check app.config");
                 return false;
             }
 
@@ -148,8 +147,8 @@ namespace BCKarcmove
             }
             catch (UnauthorizedAccessException ex)
             {
-                writer.WriteLine("ERROR: Ошибка доступа");
-                writer.WriteLine("ERROR: {0}", ex.Message);
+                writer.WriteLine(DateTime.Now + " ERROR: Ошибка доступа");
+                writer.WriteLine(DateTime.Now + " ERROR: {0}", ex.Message);
                 return false;
             }
 
@@ -159,6 +158,7 @@ namespace BCKarcmove
 
         static void sendmail(bool flag)
         {
+            Console.WriteLine("Отправка отчёта на {0}" , Properties.Settings.Default.MailAddress);
             MailAddress mailadress = new MailAddress(Properties.Settings.Default.MailAddress);
             MailMessage message = new MailMessage(mailadress, mailadress);
             if (flag)
@@ -168,7 +168,7 @@ namespace BCKarcmove
             }
             else
             {
-                message.Subject = "Что то пошло не так..";
+                message.Subject = "Что то пошло не так...";
                 message.Body = "С бэкапами что-то не так, проверь лог файл.";
             }
 
