@@ -8,40 +8,84 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
 
-
-
-
-/*
- * Перед началом работы надо проверить, есть ли 7z или WinRar по путям, прописанным в настройках
- * А так же доступ к каталогам источника и назначения
- * 
- * 
- Удаляем старые архивы из папки назначения
- Создаём архивы с файлами .BAK  , рядом с этими же файлами
+/*Запустить программу можно без параметров, с 2 и 3 параметрами
+ Без параметров - Все настройки программа берёт из xml файлика рядом
+ 2 параметра - первый - путь к бэкапам, второй - путь, куда складывать архивы, удялает бэкапы старше того ког-ва дней, которое прописанов  xml
+ 3 параметра -  то же, что и 2 параметра, но количество дней прописываем тут
  
- Копируем архивы по пути назначения, удаляем архив из назначения, если всё прошло хорошо
- было бы хорошо прикрутить ещё и отправку уведомления по почте
+     
+     Функционал:
+     Ищет в заданной папке .BAK файлы, пакует их тут же в архивы .rar  и перемещет в заданную папку для архивов.
+     В параметре DaysToLive прописывается, за сколько дней хранятся архивы. Т.е. если поставить 3 - то перед перемещением новых архивов, программа удалит
+     из папки для архивов все *.rar старше 3 дней
 
+    Также отправляет сообщение с прикреплённым логом на почту, которую можно настроить в xml ке
+    Если почта не настроена - просто пропустит этот шаг и закроется
+
+    Пример запуска BCKarcmove.exe E:\BackUps\ \\Resserver\copies\ 5     - Архивы bak файлов создаются на резервном сервере и хранятся 5 дней
+                   BCKarcmove.exe E:\BackUps\ \\Resserver\copies\ - аналогично, но хранятся столько дней, сколько прописано в параметре 
+                        <setting name="DaysToLive" serializeAs="String">
+                                 <value>3</value>
+                       в XMLке
+                   BCKarcmove.exe   - все параметры берёт из xml файла.
+    
      */
+
 
 namespace BCKarcmove
 {
     class Program
     {
         public static StreamWriter writer = new StreamWriter("logfile.log");
-        
+        public static string bckPath;
+        public static string arcPath;
+        public static double DaysToLive;
         static void Main(string[] args)
         {
-            Console.WriteLine("Выполняется архивирование копий БД");
-            writer.WriteLine(DateTime.Now + " --- Program started ---");
-            if (!SettingsCheck())
+
+           
+            switch (args.Length)
             {
-                
-                exit(false);
+                case 0:
+                    {
+                        bckPath = Properties.Settings.Default.BackupPath;
+                        arcPath = Properties.Settings.Default.ReservePath;
+                        DaysToLive = Properties.Settings.Default.DaysToLive;
+                        break;
+                    }
+                case 2:
+                    {
+                        bckPath = args[0];
+                        arcPath = args[1];
+                        DaysToLive = Properties.Settings.Default.DaysToLive;
+                        break;
+                    }
+                case 3:
+                    {
+                        bckPath = args[0];
+                        arcPath = args[1];
+                        DaysToLive = Convert.ToDouble(args[2]);
+                        break;
+                    }
+                default:
+                    {
+                        writer.WriteLine(DateTime.Now + " ERROR: Неверное количество аргументов. допустимо 0 2 и 3 ");
+                        exit(false);
+                        break;
+                    }
+
             }
 
+            Console.WriteLine("Выполняется архивирование копий БД");
+            writer.WriteLine(DateTime.Now + " --- Program started ---");
+
+
+            if (!SettingsCheck())
+            {
+                exit(false);
+            }
             
-            string[] filesSource = Directory.GetFiles(Properties.Settings.Default.BackupPath,"*.BAK");
+            string[] filesSource = Directory.GetFiles(bckPath,"*.BAK");
             writer.WriteLine(DateTime.Now + " INFO: Found " + filesSource.Length + " BAK files");
 
             foreach (string file in filesSource)
@@ -52,14 +96,14 @@ namespace BCKarcmove
             }
             writer.WriteLine(DateTime.Now + " INFO: Packing done");
 
-            string[] filesDest = Directory.GetFiles(Properties.Settings.Default.ReservePath, "*.rar");
+            string[] filesDest = Directory.GetFiles(arcPath, "*.rar");
             writer.WriteLine(DateTime.Now + " INFO: {0} .rar files found in destination folder", filesDest.Length );
             writer.WriteLine(DateTime.Now + " INFO: Starting to delete old archives");
             if (filesDest.Length > 0)
             { // Удаляем в папке назначения файлы старше N дней, где N задаётся в настройках
                 foreach (string file in filesDest)
                 {
-                    if (DateTime.Now.AddHours(2) > File.GetCreationTime(file).AddDays(Properties.Settings.Default.DaysToLive))
+                    if (DateTime.Now.AddHours(2) > File.GetCreationTime(file).AddDays(DaysToLive))
                     { // если файлу больше заданного дней
                         writer.WriteLine("");
                         File.Delete(file);
@@ -70,7 +114,7 @@ namespace BCKarcmove
             writer.WriteLine(DateTime.Now + " INFO: Deleteing done");
             writer.WriteLine(DateTime.Now + " INFO: Starting to move RARs to destination");
 
-            string[] archives = Directory.GetFiles(Properties.Settings.Default.BackupPath, "*.rar");
+            string[] archives = Directory.GetFiles(bckPath, "*.rar");
             Console.WriteLine("Перемещение архивов в место хранения");
             writer.WriteLine(DateTime.Now + " INFO: Found {0} archives", archives.Length);
             foreach (string item in archives)
@@ -80,24 +124,20 @@ namespace BCKarcmove
                 writer.WriteLine(DateTime.Now + " INFO: Moving {0} to destination", filename );
                 try
                 {
-                    File.Move(item, Properties.Settings.Default.ReservePath + filename);
+                    File.Move(item, arcPath + filename);
                 }
                 catch (System.IO.IOException ex)
                 {
-                    string str = ex.ToString();
                     writer.WriteLine(DateTime.Now + " ERROR: {0} file : {1}", ex.Message, filename);
                     writer.WriteLine(DateTime.Now + " ERROR: Seems program already has ran today");
 
-                    if (File.GetCreationTime(item) >= File.GetCreationTime(Properties.Settings.Default.ReservePath + filename))
+                    if (File.GetCreationTime(item) >= File.GetCreationTime(arcPath + filename))
                     {
-                        File.Delete(Properties.Settings.Default.ReservePath + filename);
+                        File.Delete(arcPath + filename);
                         writer.WriteLine(DateTime.Now + " INFO: File in dest folder is older, removing");
-                        File.Move(item, Properties.Settings.Default.ReservePath + filename);
+                        File.Move(item, arcPath + filename);
                         writer.WriteLine(DateTime.Now + " INFO: File {0} replaced with new one", filename );
                     }
-
-
-
 
                 }
 
@@ -115,8 +155,8 @@ namespace BCKarcmove
         }
         static bool SettingsCheck()
         {
-            string bckPath = Properties.Settings.Default.BackupPath;
-            string arcPath = Properties.Settings.Default.ReservePath;
+           // string bckPath = Properties.Settings.Default.BackupPath;
+         //   string arcPath = Properties.Settings.Default.ReservePath;
 
             if (!(Directory.Exists(bckPath)))
             {
