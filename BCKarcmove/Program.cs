@@ -51,6 +51,7 @@ namespace BCKarcmove
                         bckPath = Properties.Settings.Default.BackupPath;
                         arcPath = Properties.Settings.Default.ReservePath;
                         DaysToLive = Properties.Settings.Default.DaysToLive;
+                        writer.WriteLine(DateTime.Now + " INFO: Start without params");
                         break;
                     }
                 case 2:
@@ -58,6 +59,7 @@ namespace BCKarcmove
                         bckPath = args[0];
                         arcPath = args[1];
                         DaysToLive = Properties.Settings.Default.DaysToLive;
+                        writer.WriteLine(DateTime.Now + " INFO: Start with 2 params");
                         break;
                     }
                 case 3:
@@ -65,11 +67,12 @@ namespace BCKarcmove
                         bckPath = args[0];
                         arcPath = args[1];
                         DaysToLive = Convert.ToDouble(args[2]);
+                        writer.WriteLine(DateTime.Now + " INFO: Start with 3 params");
                         break;
                     }
                 default:
                     {
-                        writer.WriteLine(DateTime.Now + " ERROR: Неверное количество аргументов. допустимо 0 2 и 3 ");
+                        writer.WriteLine(DateTime.Now + " ERROR: Params not valid. Allowed 0 2 or 3 params ");
                         exit(false);
                         break;
                     }
@@ -113,6 +116,7 @@ namespace BCKarcmove
             }
             writer.WriteLine(DateTime.Now + " INFO: Deleteing done");
             writer.WriteLine(DateTime.Now + " INFO: Starting to move RARs to destination");
+            writer.WriteLine(DateTime.Now + " INFO: Destination is: {0}", arcPath);
 
             string[] archives = Directory.GetFiles(bckPath, "*.rar");
             Console.WriteLine("Перемещение архивов в место хранения");
@@ -203,8 +207,8 @@ namespace BCKarcmove
             MailMessage message = new MailMessage(mailadress, mailadress);
             if (flag)
             {
-                message.Subject = "Бэкапы готовы";
-                message.Body = "Бэкапы успешно упакованы и скопированы";
+                message.Subject = "Созданы архивы BAK файлов из " + bckPath ;
+                message.Body = "Бэкапы успешно упакованы и скопированы на " + arcPath;
             }
             else
             {
@@ -226,7 +230,6 @@ namespace BCKarcmove
             {
                 Environment.Exit(0);
             }
-
 
         }
 
