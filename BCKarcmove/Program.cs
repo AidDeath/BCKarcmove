@@ -51,7 +51,8 @@ namespace BCKarcmove
                         bckPath = Properties.Settings.Default.BackupPath;
                         arcPath = Properties.Settings.Default.ReservePath;
                         DaysToLive = Properties.Settings.Default.DaysToLive;
-                        writer.WriteLine(DateTime.Now + " INFO: Start without params");
+                        writer.WriteLine(DateTime.Now + $" INFO: Start without params");
+                       
                         break;
                     }
                 case 2:
@@ -78,6 +79,10 @@ namespace BCKarcmove
                     }
 
             }
+
+            writer.WriteLine(DateTime.Now + $" INFO: Params initiated: \nBAK path = {bckPath}\nARC path = {arcPath}\nDaysToLive = {DaysToLive}");
+            writer.WriteLine(DateTime.Now + $" INFO: starting host: {Environment.MachineName}");
+
 
             Console.WriteLine("Выполняется архивирование копий БД");
             writer.WriteLine(DateTime.Now + " --- Program started ---");
@@ -159,12 +164,9 @@ namespace BCKarcmove
         }
         static bool SettingsCheck()
         {
-           // string bckPath = Properties.Settings.Default.BackupPath;
-         //   string arcPath = Properties.Settings.Default.ReservePath;
-
+          
             if (!(Directory.Exists(bckPath)))
             {
-                //writer.WriteLine("");
                 writer.WriteLine(DateTime.Now + " ERROR: Path with backups is not exists");
                 writer.WriteLine(DateTime.Now + " Check app.config");
                 return false;
