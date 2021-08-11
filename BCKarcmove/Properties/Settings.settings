@@ -3,22 +3,25 @@
   <Profiles />
   <Settings>
     <Setting Name="ReservePath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">D:\DEV2\</Value>
+      <Value Profile="(Default)">d:\Temp\TMP2\</Value>
     </Setting>
     <Setting Name="DaysToLive" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">3</Value>
     </Setting>
     <Setting Name="BackupPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">D:\DEV\</Value>
+      <Value Profile="(Default)">d:\Temp\TMP1\</Value>
     </Setting>
     <Setting Name="MailAddress" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">p607ivc@minoblgu.by</Value>
+      <Value Profile="(Default)">F506-U001@mfrb.by</Value>
     </Setting>
     <Setting Name="Mailpwd" Type="System.String" Scope="User">
-      <Value Profile="(Default)">qwe123DSA</Value>
+      <Value Profile="(Default)">AidDeath†</Value>
     </Setting>
     <Setting Name="Mailserver" Type="System.String" Scope="User">
-      <Value Profile="(Default)">ominskex</Value>
+      <Value Profile="(Default)">mail.mfrb.by</Value>
+    </Setting>
+    <Setting Name="ArchiveDirectly" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>
