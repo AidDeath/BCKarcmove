@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Net;
-using System.Net.Mail;
-using System.Runtime.CompilerServices;
 using BCKarcmove.Properties;
 
 /*Запустить программу можно без параметров, с 2 и 3 параметрами
@@ -31,6 +26,8 @@ using BCKarcmove.Properties;
 
             Добавлен параметр ArchiveDirectly. Если true - то архивы файлов создаются сразу на сервере назначения, false - рядом с файлами бэкапов и потом перемещаются.
     
+        Лучше всего прописывать вызов програмы в задании на sql-сервере, чтобы по завершении создания бэкапов - начиналась архивация
+        Программа не следит за BAK файлами и не удаляет старые! Это сделано, чтобы админ сам следил за удалением орагиналов бэкапов (Я делаю это в плане обслеживания на sql сервере)
      */
 
 
@@ -38,7 +35,7 @@ namespace BCKarcmove
 {
     internal class Program
     {
-        private static Logger _logger = new Logger();
+        private static readonly Logger Logger = new Logger();
         public static string BckPath;
         public static string ArcPath;
         public static double DaysToLive;
@@ -54,7 +51,7 @@ namespace BCKarcmove
                     ArcPath = Settings.Default.ReservePath;
                     DaysToLive = Settings.Default.DaysToLive;
                     ArchiveDirectly = Settings.Default.ArchiveDirectly;
-                    _logger.WriteToLog("Start without params", EventType.Info);
+                    Logger.WriteToLog("Start without params", EventType.Info);
                     break;
                 }
                 case 2:
@@ -63,70 +60,64 @@ namespace BCKarcmove
                     ArcPath = args[1];
                     DaysToLive = Settings.Default.DaysToLive;
                     ArchiveDirectly = Settings.Default.ArchiveDirectly;
-                    _logger.WriteToLog("Start with 2 params", EventType.Info);
+                    Logger.WriteToLog("Start with 2 params", EventType.Info);
                     break;
                 }
                 case 3:
                 {
                     BckPath = args[0];
                     ArcPath = args[1];
-                    DaysToLive = Convert.ToDouble(args[2]);
+                    DaysToLive = Convert.ToInt32(args[2]);
                     ArchiveDirectly = Settings.Default.ArchiveDirectly;
-                    _logger.WriteToLog("Start with 3 params", EventType.Info);
+                    Logger.WriteToLog("Start with 3 params", EventType.Info);
                     break;
                 }
                 default:
                 {
-                    _logger.WriteToLog("Params not valid. Allowed 0 2 or 3 params", EventType.Err);
+                    Logger.WriteToLog("Params not valid. Allowed 0 2 or 3 params", EventType.Err);
                     Exit(false);
                     break;
                 }
             }
 
-            _logger.WriteToLog($"Params initiated: \nBAK path = {BckPath}\nARC path = {ArcPath}\nDaysToLive = {DaysToLive}\nArchiveDirectly = {ArchiveDirectly}", EventType.Info);
-
+            Logger.WriteToLog($"Params initiated: \nBAK path = {BckPath}\nARC path = {ArcPath}\nDaysToLive = {DaysToLive}\nArchiveDirectly = {ArchiveDirectly}", EventType.Info);
             
             
             if (!SettingsCheck()) Exit(false);
             Console.WriteLine("Проверка параметров прошла успешно");
 
             Console.WriteLine($"Удаление архивов старше {DaysToLive} дней");
-            _logger.WriteToLog("Starting to delete old backups", EventType.Info);
+            Logger.WriteToLog("Starting to delete old backups", EventType.Info);
 
             var filesDest = Directory.GetFiles(ArcPath, "*_*??.rar");
-            _logger.WriteToLog($"Found {filesDest.Length} archives", EventType.Info);
+            Logger.WriteToLog($"Found {filesDest.Length} archives", EventType.Info);
             foreach (var arch in filesDest)
             {
                 var tail = arch.Substring(arch.LastIndexOf("_", StringComparison.Ordinal) + 1);
                 var numDay = int.Parse(tail.Substring(0, tail.IndexOf(".", StringComparison.Ordinal)));
-                if (numDay + 3 >= DateTime.Today.DayOfYear) continue;
+                if (numDay + DaysToLive > DateTime.Today.DayOfYear) continue;
                 File.Delete(arch);
-                _logger.WriteToLog($"File {arch} removed as too old", EventType.Info);
+                Logger.WriteToLog($"File {arch} removed as too old", EventType.Info);
             }
 
 
 
             Console.WriteLine("Выполняется архивирование копий БД");
             var filesSource = Directory.GetFiles(BckPath, "*.BAK");
-            _logger.WriteToLog($"Found {filesSource.Length} .BAK files", EventType.Info);
+            Logger.WriteToLog($"Found {filesSource.Length} .BAK files", EventType.Info);
             Console.WriteLine($"Найдено {filesSource.Length} .BAK файлов");
 
             if (filesSource.Length > 0)
             {
                 foreach (var filePath in filesSource)
                 {
-                    var backup = new BackupFile
-                    {
-                        FileName = Path.GetFileName(filePath),
-                        FullFileName = filePath,
-                        CreatedTime = File.GetCreationTime(filePath),
-                        ArchiveDestination = ArchiveDirectly ? ArcPath : BckPath
-                    };
+                    var backup = new BackupFile(filePath, ArchiveDirectly ? ArcPath : null);
 
                     try
                     {
                         var archFullPath = backup.CreateArch();
-                        _logger.WriteToLog($"Created archive {archFullPath}", EventType.Info);
+                        Console.WriteLine($"Создан архив {Path.GetFileName(archFullPath)}");
+                        Logger.WriteToLog($"Created archive {archFullPath}", EventType.Info);
 
                         if (!ArchiveDirectly)
                         {
@@ -134,17 +125,19 @@ namespace BCKarcmove
                             if (File.Exists(arcFullPath))
                             {
                                 File.Delete(arcFullPath);
-                                _logger.WriteToLog($"Overwriting archive {arcFullPath}", EventType.Warn);
+                                Console.WriteLine($"Файл уже существовал, перезаписываем");
+                                Logger.WriteToLog($"Overwriting archive {arcFullPath}", EventType.Warn);
                             }
                             
                             File.Move(archFullPath, arcFullPath);
-                            _logger.WriteToLog($"Archive moved to {arcFullPath}", EventType.Info);
+                            Console.WriteLine($"Перемещён в {arcFullPath}");
+                            Logger.WriteToLog($"Archive moved to {arcFullPath}", EventType.Info);
 
                         }
                     }
                     catch (Exception e)
                     {
-                        _logger.WriteToLog(e.GetBaseException().Message, EventType.Err);
+                        Logger.WriteToLog(e.GetBaseException().Message, EventType.Err);
                         Exit(false);
                     }
                 }
@@ -155,14 +148,25 @@ namespace BCKarcmove
 
         public static void Exit(bool flag)
         {
-            _logger.FinishLogger();
+            if (flag)
+            {
+                Console.WriteLine("Успешное завершение программы");
+                Logger.WriteToLog("Programm finished succesfully", EventType.Info);
+            }
+            else
+            {
+                Console.WriteLine("Аварийное завершение программы");
+                Logger.WriteToLog("Program routine failed!", EventType.Err);
+            }
+            
+            Logger.FinishLogger();
             try
             {
-                Sendmail(flag);
+                Mailer.SendMail(flag);
             }
             catch (Exception e)
             {
-                Console.WriteLine("Что то пошло не так при создании архивов");
+                Console.WriteLine("Что то пошло не так при отправке почты");
                 Console.WriteLine(e);
                 Console.ReadKey();
             }
@@ -173,13 +177,13 @@ namespace BCKarcmove
         {
             if (!Directory.Exists(BckPath))
             {
-                _logger.WriteToLog("Path with backups is not exists", EventType.Err);
+                Logger.WriteToLog("Path with backups is not exists", EventType.Err);
                 return false;
             }
 
             if (!Directory.Exists(ArcPath))
             {
-                _logger.WriteToLog("Path for archives is not exists", EventType.Err);
+                Logger.WriteToLog("Path for archives is not exists", EventType.Err);
                 return false;
             }
 
@@ -190,46 +194,10 @@ namespace BCKarcmove
             }
             catch (Exception ex)
             {
-                _logger.WriteToLog(ex.GetBaseException().Message, EventType.Err);
+                Logger.WriteToLog(ex.GetBaseException().Message, EventType.Err);
             }
-
 
             return true;
-        }
-
-        private static void Sendmail(bool flag)
-        {
-            Console.WriteLine($"Отправка отчёта на {Settings.Default.MailAddress}");
-            var mailAddress = new MailAddress(Settings.Default.MailAddress);
-            var message = new MailMessage(mailAddress, mailAddress);
-            if (flag)
-            {
-                message.Subject = "Созданы архивы BAK файлов из " + BckPath;
-                message.Body = "Бэкапы успешно упакованы и скопированы на " + ArcPath;
-            }
-            else
-            {
-                message.Subject = "Что то пошло не так...";
-                message.Body = "С бэкапами что-то не так, проверь лог файл.";
-            }
-
-
-            message.Attachments.Add(new Attachment("logfile.log"));
-
-            var smtp = new SmtpClient(Settings.Default.Mailserver)
-            {
-                Credentials = new NetworkCredential(Settings.Default.MailAddress, Settings.Default.Mailpwd),
-                EnableSsl = false
-            };
-
-            try
-            {
-                smtp.Send(message);
-            }
-            catch (Exception)
-            {
-                Environment.Exit(0);
-            }
         }
     }
 }

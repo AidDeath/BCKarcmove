@@ -25,7 +25,7 @@ namespace BCKarcmove.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("d:\\Temp\\TMP2\\")]
+        [global::System.Configuration.DefaultSettingValueAttribute("\\\\F506-SR-DOC\\BackUp_OGU\\")]
         public string ReservePath {
             get {
                 return ((string)(this["ReservePath"]));
@@ -85,7 +85,7 @@ namespace BCKarcmove.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ArchiveDirectly {
             get {
                 return ((bool)(this["ArchiveDirectly"]));
