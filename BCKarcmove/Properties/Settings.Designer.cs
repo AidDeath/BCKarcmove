@@ -94,5 +94,14 @@ namespace BCKarcmove.Properties {
                 this["ArchiveDirectly"] = value;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public short ArchiverType {
+            get {
+                return ((short)(this["ArchiverType"]));
+            }
+        }
     }
 }

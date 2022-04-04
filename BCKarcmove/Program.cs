@@ -25,6 +25,11 @@ using BCKarcmove.Properties;
                    
 
             Добавлен параметр ArchiveDirectly. Если true - то архивы файлов создаются сразу на сервере назначения, false - рядом с файлами бэкапов и потом перемещаются.
+
+        Добавлен параметр типа архивации  0  - Вызывает установленный в системе WinRAR, 1 - встроенный в программу архиватор
+          <setting name="ArchiverType" serializeAs="String">
+            <value>0</value>
+          </setting>
     
         Лучше всего прописывать вызов програмы в задании на sql-сервере, чтобы по завершении создания бэкапов - начиналась архивация
         Программа не следит за BAK файлами и не удаляет старые! Это сделано, чтобы админ сам следил за удалением орагиналов бэкапов (Я делаю это в плане обслеживания на sql сервере)
@@ -170,7 +175,7 @@ namespace BCKarcmove
                 Console.WriteLine(e);
                 Console.ReadKey();
             }
-            Environment.Exit(0);
+            Environment.Exit(flag ? 0 : -1);
         }
 
         private static bool SettingsCheck()
