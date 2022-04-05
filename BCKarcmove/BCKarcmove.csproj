@@ -66,13 +66,16 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchiveFile.cs" />
     <Compile Include="BackupFile.cs" />
+    <Compile Include="ImageGenerator.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Mailer.cs" />
     <Compile Include="Program.cs" />

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using BCKarcmove.Properties;
 
@@ -46,6 +47,8 @@ namespace BCKarcmove
         public static double DaysToLive;
         public static bool ArchiveDirectly;
 
+        public static List<ArchiveFile> ArchivedFiles;
+
         private static void Main(string[] args)
         {
             switch (args.Length)
@@ -84,6 +87,9 @@ namespace BCKarcmove
                     break;
                 }
             }
+
+            //Если нужна генерация картинок - инициализируем коллекцию для хранения информации о файлах архивов
+            if (Settings.Default.GenerateImage) ArchivedFiles = new List<ArchiveFile>();
 
             Logger.WriteToLog($"Params initiated: \nBAK path = {BckPath}\nARC path = {ArcPath}\nDaysToLive = {DaysToLive}\nArchiveDirectly = {ArchiveDirectly}", EventType.Info);
             
@@ -138,6 +144,8 @@ namespace BCKarcmove
                             Console.WriteLine($"Перемещён в {arcFullPath}");
                             Logger.WriteToLog($"Archive moved to {arcFullPath}", EventType.Info);
 
+                            //Собираем информацию о созданных архивах для генерации картинки
+                            ArchivedFiles?.Add(new ArchiveFile(arcFullPath));
                         }
                     }
                     catch (Exception e)
@@ -167,7 +175,7 @@ namespace BCKarcmove
             Logger.FinishLogger();
             try
             {
-                Mailer.SendMail(flag);
+                Mailer.SendMail(flag, ArchivedFiles ?? null );
             }
             catch (Exception e)
             {

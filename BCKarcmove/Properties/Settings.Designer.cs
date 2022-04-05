@@ -25,7 +25,7 @@ namespace BCKarcmove.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("\\\\F506-SR-DOC\\BackUp_OGU\\")]
+        [global::System.Configuration.DefaultSettingValueAttribute("d:\\Temp\\TMP2\\")]
         public string ReservePath {
             get {
                 return ((string)(this["ReservePath"]));
@@ -85,7 +85,7 @@ namespace BCKarcmove.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ArchiveDirectly {
             get {
                 return ((bool)(this["ArchiveDirectly"]));
@@ -97,10 +97,19 @@ namespace BCKarcmove.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
         public short ArchiverType {
             get {
                 return ((short)(this["ArchiverType"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool GenerateImage {
+            get {
+                return ((bool)(this["GenerateImage"]));
             }
         }
     }

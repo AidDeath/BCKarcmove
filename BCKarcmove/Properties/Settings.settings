@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="ReservePath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">\\F506-SR-DOC\BackUp_OGU\</Value>
+      <Value Profile="(Default)">d:\Temp\TMP2\</Value>
     </Setting>
     <Setting Name="DaysToLive" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">3</Value>
@@ -21,10 +21,13 @@
       <Value Profile="(Default)">mail.mfrb.by</Value>
     </Setting>
     <Setting Name="ArchiveDirectly" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ArchiverType" Type="System.Int16" Scope="Application">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="GenerateImage" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>
